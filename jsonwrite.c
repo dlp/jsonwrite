@@ -137,6 +137,9 @@ void jwr_init_r(struct jwr *jwr, char *buf, size_t size)
     jwr->buf = buf;
     jwr->size = size;
     jwr->pos = 0;
+#ifdef JWR_PRETTY
+    jwr->depth = 0;
+#endif /* JWR_PRETTY */
     jwr->tos = jwr->stk;
 
     (void) memset(jwr->stk, 0, sizeof jwr->stk);
@@ -150,6 +153,9 @@ void jwr_init_r(struct jwr *jwr, char *buf, size_t size)
 size_t jwr_finish_r(struct jwr *jwr)
 {
     assert(jwr->tos == jwr->stk && (*jwr->tos & ~JWR_NXT) == '\0');
+#ifdef JWR_PRETTY
+    assert(jwr->depth == 0);
+#endif /* JWR_PRETTY */
     jwr->buf[jwr->pos] = '\0';
     return jwr->pos;
 }
