@@ -174,16 +174,24 @@ void jwr_str_r(struct jwr *jwr, const char *s)
 /**
  * Write an integer value
  */
-void jwr_int_r(struct jwr *jwr, int64_t val)
+void jwr_int_r (struct jwr *jwr, int64_t val)
 {
-    char tmp[32];
-    int cnt = snprintf(tmp, sizeof tmp, "%"PRIi64, val);
+    int cnt;
 
-    assert(cnt < (int)sizeof tmp);
-    assert(!jwr_tos_is(jwr, JWR_OBJ));
-    jwr_sep(jwr);
-    jwr_raw(jwr, tmp, (size_t)cnt);
-    jwr_popkey(jwr);
+    assert (!jwr_tos_is (jwr, JWR_OBJ));
+    jwr_sep (jwr);
+
+    /* writes at most (size - pos) bytes including '\0' terminator */
+    cnt = snprintf (&jwr->buf[jwr->pos], jwr->size - jwr->pos, "%"PRIi64, val);
+
+    /* return value is the number of bytes written (or would have been written)
+        * excluding the '\0' terminator. Hence, a value equal or greater than the
+        * limit indicates that it was truncated (did not fit)
+        */
+    assert (cnt > 0 && cnt < (int)(jwr->size - jwr->pos));
+    jwr->pos += (size_t) cnt;
+
+    jwr_popkey (jwr);
 }
 
 /**
