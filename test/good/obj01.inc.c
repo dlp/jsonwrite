@@ -7,4 +7,4 @@ for (int i = 0; i < 100; i++)
     jwr_key(tmp);
     jwr_int(i);
 }
-jwr_pop();
+jwr_close();

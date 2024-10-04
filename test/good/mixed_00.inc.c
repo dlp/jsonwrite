@@ -17,7 +17,7 @@ jwr_key("elem3");
 jwr_arr();
 jwr_int(42);
 jwr_str("foo");
-jwr_pop();
+jwr_close();
 
 jwr_key("elem4");
 jwr_obj();
@@ -25,11 +25,11 @@ jwr_key("nk1");
 jwr_str("nv1");
 jwr_key("nk2");
 jwr_str("nv2");
-jwr_pop();
+jwr_close();
 
-jwr_pop();
+jwr_close();
 
-jwr_pop();
+jwr_close();
 jwr_null();
-jwr_pop();
+jwr_close();
 

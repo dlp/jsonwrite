@@ -1,6 +1,6 @@
 jwr_arr();
 jwr_int(0);
 jwr_int(0);
-jwr_pop();
+jwr_close();
 
 jwr_int(0);

@@ -265,7 +265,7 @@ void jwr_key_r(struct jwr *jwr, const char *key)
 /**
  * Close the array/object
  */
-void jwr_pop_r(struct jwr *jwr)
+void jwr_close_r(struct jwr *jwr)
 {
     char type = *jwr->tos & ~JWR_NXT;
 
@@ -299,5 +299,5 @@ void jwr_bool(bool val) { jwr_bool_r(&g_jwr, val); }
 void jwr_arr(void) { jwr_arr_r(&g_jwr); }
 void jwr_obj(void) { jwr_obj_r(&g_jwr); }
 void jwr_key(const char *key) { jwr_key_r(&g_jwr, key); }
-void jwr_pop(void) { jwr_pop_r(&g_jwr); }
+void jwr_close(void) { jwr_close_r(&g_jwr); }
 

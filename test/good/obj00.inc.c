@@ -1,3 +1,3 @@
 
 jwr_obj();
-jwr_pop();
+jwr_close();

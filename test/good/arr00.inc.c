@@ -1,2 +1,2 @@
 jwr_arr();
-jwr_pop();
+jwr_close();

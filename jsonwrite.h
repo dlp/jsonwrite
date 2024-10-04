@@ -18,7 +18,7 @@ void jwr_bool_r(struct jwr *jwr, bool val);
 void jwr_arr_r(struct jwr *jwr);
 void jwr_obj_r(struct jwr *jwr);
 void jwr_key_r(struct jwr *jwr, const char *key);
-void jwr_pop_r(struct jwr *jwr);
+void jwr_close_r(struct jwr *jwr);
 
 
 void jwr_init(char *buf, size_t size);
@@ -30,7 +30,7 @@ void jwr_bool(bool val);
 void jwr_arr(void);
 void jwr_obj(void);
 void jwr_key(const char *key);
-void jwr_pop(void);
+void jwr_close(void);
 
 
 #endif /* _JSONWRITE_H_ */
