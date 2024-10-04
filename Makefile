@@ -1,5 +1,6 @@
-
-CFLAGS = -std=c11 -pedantic -Wall -O0 -g
+CC = gcc
+CFLAGS  = -std=c17 -pedantic -Wall -O0 -g
+CFLAGS += -DDEBUG
 
 CLR = "\033[0m"
 RED = "\033[0;31m"
@@ -22,11 +23,11 @@ test/bad/%.out: test/bad/%.test
 	! $< >$@
 
 test/%.test: test/%.test.o jsonwrite.o
-	gcc -o $@ $^
+	$(CC) -o $@ $^
 
 test/%.test.o: test/%.inc.c
 	@sed -e "/__TESTFILE__/r $<" \
 	    -e "/__TESTFILE__/d" test/main.c |\
-	    gcc -c -o $@ -I.. -xc -
+	    $(CC) $(CFLAGS) -c -o $@ -I.. -xc -
 clean:
-	rm -fr test/*/*.test test/*/*.out test/*/*.chk
+	rm -fr *.o test/*/*.test test/*/*.out test/*/*.chk

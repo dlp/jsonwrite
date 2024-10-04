@@ -21,6 +21,7 @@
 #define JWR_STK_MAX  32
 
 //#define JWR_PRETTY
+#define JWR_COMPACT
 
 struct jwr {
     char *buf;
@@ -33,6 +34,17 @@ struct jwr {
     char stk[JWR_STK_MAX];
 };
 
+#ifdef DEBUG
+void jwr_dump_r(struct jwr *jwr)
+{
+    fprintf(stderr, "-- DUMP--\n%s\n", jwr->buf);
+
+    fputc('[', stderr);
+    for (char *s = jwr->stk; s <= jwr->tos; s++) fputc(*s, stderr);
+    fputc(']', stderr);
+    fputc('\n', stderr);
+}
+#endif /* DEBUG */
 
 static void jwr_raw(struct jwr *jwr, const char *raw, size_t len)
 {
@@ -99,7 +111,9 @@ static void jwr_sep(struct jwr *jwr)
 #ifdef JWR_PRETTY
             jwr_indent(jwr);
 #else
+#  ifndef JWR_COMPACT
             jwr_char(jwr, ' ');
+#  endif /* JWR_COMPACT */
 #endif /* JWR_PRETTY */
         }
     }
@@ -259,7 +273,9 @@ void jwr_key_r(struct jwr *jwr, const char *key)
     jwr_push(jwr, JWR_KEY);
     jwr_qstr(jwr, key);
     jwr_char(jwr, ':');
+#ifndef JWR_COMPACT
     jwr_char(jwr, ' ');
+#endif /* JWR_COMPACT */
 }
 
 /**
@@ -301,3 +317,6 @@ void jwr_obj(void) { jwr_obj_r(&g_jwr); }
 void jwr_key(const char *key) { jwr_key_r(&g_jwr, key); }
 void jwr_close(void) { jwr_close_r(&g_jwr); }
 
+#ifdef DEBUG
+void jwr_dump(void) { jwr_dump_r(&g_jwr); }
+#endif /* DEBUG */

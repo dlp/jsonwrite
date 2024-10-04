@@ -19,6 +19,9 @@ void jwr_arr_r(struct jwr *jwr);
 void jwr_obj_r(struct jwr *jwr);
 void jwr_key_r(struct jwr *jwr, const char *key);
 void jwr_close_r(struct jwr *jwr);
+#ifdef DEBUG
+void jwr_dump_r(struct jwr *jwr);
+#endif /* DEBUG */
 
 
 void jwr_init(char *buf, size_t size);
@@ -31,6 +34,9 @@ void jwr_arr(void);
 void jwr_obj(void);
 void jwr_key(const char *key);
 void jwr_close(void);
+#ifdef DEBUG
+void jwr_dump(void);
+#endif /* DEBUG */
 
 
 #endif /* _JSONWRITE_H_ */
