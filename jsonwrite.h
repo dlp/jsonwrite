@@ -9,7 +9,7 @@
 /* opaque type */
 struct jwr;
 
-void jwr_init_r(struct jwr *jwr, char *buf, size_t size);
+void jwr_init_r(struct jwr *jwr, char *buf, size_t size, unsigned flags);
 size_t jwr_finish_r(struct jwr *jwr);
 void jwr_str_r(struct jwr *jwr, const char *s);
 void jwr_int_r(struct jwr *jwr, int64_t val);
@@ -24,7 +24,7 @@ void jwr_dump_r(struct jwr *jwr);
 #endif /* DEBUG */
 
 
-void jwr_init(char *buf, size_t size);
+void jwr_init(char *buf, size_t size, unsigned flags);
 size_t jwr_finish(void);
 void jwr_str(const char *s);
 void jwr_int(int64_t val);

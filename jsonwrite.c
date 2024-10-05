@@ -20,16 +20,16 @@
 
 #define JWR_STK_MAX  32
 
-//#define JWR_PRETTY
-#define JWR_COMPACT
+/* PRETTY overrides COMPACT */
+#define JWR_PRETTY  (1 << 0)
+#define JWR_COMPACT (1 << 1)
 
 struct jwr {
     char *buf;
     size_t size;
     size_t pos;
-#ifdef JWR_PRETTY
     int depth;
-#endif /* JWR_PRETTY */
+    unsigned flags;
     char *tos;
     char stk[JWR_STK_MAX];
 };
@@ -46,6 +46,11 @@ void jwr_dump_r(struct jwr *jwr)
 }
 #endif /* DEBUG */
 
+static inline bool flag_is_set(struct jwr *jwr, unsigned flag)
+{
+    return (jwr->flags & flag) != 0;
+}
+
 static void jwr_raw(struct jwr *jwr, const char *raw, size_t len)
 {
     assert(jwr->pos + len < jwr->size);
@@ -59,7 +64,6 @@ static void jwr_char(struct jwr *jwr, char c)
     jwr->buf[jwr->pos++] = c;
 }
 
-#ifdef JWR_PRETTY
 static void jwr_indent(struct jwr *jwr)
 {
     jwr_char(jwr, '\n');
@@ -68,7 +72,6 @@ static void jwr_indent(struct jwr *jwr)
         jwr_char(jwr, ' ');
     }
 }
-#endif /* JWR_PRETTY */
 
 static void jwr_push(struct jwr *jwr, char type)
 {
@@ -108,13 +111,14 @@ static void jwr_sep(struct jwr *jwr)
         if ((*jwr->tos & JWR_NXT) == JWR_NXT)
         {
             jwr_char(jwr, ',');
-#ifdef JWR_PRETTY
-            jwr_indent(jwr);
-#else
-#  ifndef JWR_COMPACT
-            jwr_char(jwr, ' ');
-#  endif /* JWR_COMPACT */
-#endif /* JWR_PRETTY */
+            if (flag_is_set (jwr, JWR_PRETTY))
+            {
+                jwr_indent(jwr);
+            }
+            else if (! flag_is_set(jwr, JWR_COMPACT))
+            {
+                jwr_char(jwr, ' ');
+            }
         }
     }
     else
@@ -136,6 +140,22 @@ static void jwr_qstr(struct jwr *jwr, const char *s)
     jwr_char(jwr, '"');
 }
 
+static void jwr_open_r(struct jwr *jwr, char type)
+{
+    char c = (type == JWR_ARR) ? '[' :
+             (type == JWR_OBJ) ? '{' :
+                            -1 ;
+    assert(c != -1);
+    jwr_sep(jwr);
+    jwr_push(jwr, type);
+    jwr_char(jwr, c);
+    jwr->depth++;
+    if (flag_is_set (jwr, JWR_PRETTY))
+    {
+        jwr_indent(jwr);
+    }
+}
+
 /*****************************************************************************
  * Public functions
  *****************************************************************************/
@@ -145,15 +165,15 @@ static void jwr_qstr(struct jwr *jwr, const char *s)
  *
  * \param buf   buffer which to write to
  * \param size  size of the buffer
+ * \param flags JWR_PRETTY, JWR_COMPACT
  */
-void jwr_init_r(struct jwr *jwr, char *buf, size_t size)
+void jwr_init_r(struct jwr *jwr, char *buf, size_t size, unsigned flags)
 {
     jwr->buf = buf;
     jwr->size = size;
     jwr->pos = 0;
-#ifdef JWR_PRETTY
     jwr->depth = 0;
-#endif /* JWR_PRETTY */
+    jwr->flags = flags;
     jwr->tos = jwr->stk;
 
     (void) memset(jwr->stk, 0, sizeof jwr->stk);
@@ -167,9 +187,7 @@ void jwr_init_r(struct jwr *jwr, char *buf, size_t size)
 size_t jwr_finish_r(struct jwr *jwr)
 {
     assert(jwr->tos == jwr->stk && (*jwr->tos & ~JWR_NXT) == '\0');
-#ifdef JWR_PRETTY
     assert(jwr->depth == 0);
-#endif /* JWR_PRETTY */
     jwr->buf[jwr->pos] = '\0';
     return jwr->pos;
 }
@@ -239,13 +257,7 @@ void jwr_bool_r(struct jwr *jwr, bool val)
  */
 void jwr_arr_r(struct jwr *jwr)
 {
-    jwr_sep(jwr);
-    jwr_push(jwr, JWR_ARR);
-    jwr_char(jwr, '[');
-#ifdef JWR_PRETTY
-    jwr->depth++;
-    jwr_indent(jwr);
-#endif /* JWR_PRETTY */
+    jwr_open_r(jwr, JWR_ARR);
 }
 
 /**
@@ -253,13 +265,7 @@ void jwr_arr_r(struct jwr *jwr)
  */
 void jwr_obj_r(struct jwr *jwr)
 {
-    jwr_sep(jwr);
-    jwr_push(jwr, JWR_OBJ);
-    jwr_char(jwr, '{');
-#ifdef JWR_PRETTY
-    jwr->depth++;
-    jwr_indent(jwr);
-#endif /* JWR_PRETTY */
+    jwr_open_r(jwr, JWR_OBJ);
 }
 
 /**
@@ -273,9 +279,10 @@ void jwr_key_r(struct jwr *jwr, const char *key)
     jwr_push(jwr, JWR_KEY);
     jwr_qstr(jwr, key);
     jwr_char(jwr, ':');
-#ifndef JWR_COMPACT
-    jwr_char(jwr, ' ');
-#endif /* JWR_COMPACT */
+    if (! flag_is_set(jwr, JWR_COMPACT))
+    {
+        jwr_char(jwr, ' ');
+    }
 }
 
 /**
@@ -288,12 +295,13 @@ void jwr_close_r(struct jwr *jwr)
     char c = (type == JWR_ARR) ? ']' :
              (type == JWR_OBJ) ? '}' :
                             -1 ;
-    *(jwr->tos--) = '\0';
     assert(c != -1);
-#ifdef JWR_PRETTY
+    *(jwr->tos--) = '\0';
     jwr->depth--;
-    jwr_indent(jwr);
-#endif /* JWR_PRETTY */
+    if (jwr->flags & JWR_PRETTY)
+    {
+        jwr_indent(jwr);
+    }
     jwr_char(jwr, c);
     jwr_popkey(jwr);
 }
@@ -306,7 +314,9 @@ void jwr_close_r(struct jwr *jwr)
 /* global struct - for non-reentrant, more compact use */
 static struct jwr g_jwr;
 
-void jwr_init(char *buf, size_t size) { jwr_init_r(&g_jwr, buf, size); }
+void jwr_init(char *buf, size_t size, unsigned flags) {
+    jwr_init_r(&g_jwr, buf, size, flags);
+}
 size_t jwr_finish(void) { return jwr_finish_r(&g_jwr); }
 void jwr_str(const char *s) { jwr_str_r(&g_jwr, s); }
 void jwr_int(int64_t val) { jwr_int_r(&g_jwr, val); }

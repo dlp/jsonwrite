@@ -7,7 +7,7 @@ static char buf[BUFSIZE];
 
 int main(int argc, char **argv)
 {
-    jwr_init(buf, sizeof buf);
+    jwr_init(buf, sizeof buf, 0);
 
     __TESTFILE__
 
